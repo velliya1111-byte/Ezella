@@ -35,6 +35,23 @@ end
 local kataModule = require(wordList:WaitForChild("IndonesianWords"))
 
 -- ================================
+-- CACHE BY FIRST LETTER (LETakkan DI SINI)
+-- ================================
+
+local letterCache = {}
+
+for _, word in ipairs(kataModule) do
+    local w = tostring(word):lower()
+    local first = w:sub(1,1)
+
+    if not letterCache[first] then
+        letterCache[first] = {}
+    end
+
+    table.insert(letterCache[first], w)
+end
+
+-- ================================
 -- REMOTES
 -- ================================
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
@@ -86,14 +103,24 @@ local function isUsed(word)
 end
 local function countNextOptions(lastLetter)
     lastLetter = lastLetter:lower()
-    local count = 0
 
-    for _, word in ipairs(kataModule) do
-        local w = tostring(word):lower()
-        if w:sub(1,1) == lastLetter and not isUsed(w) then
+    local list = letterCache[lastLetter]
+    if not list then return 0 end
+
+    local count = 0
+    local checked = 0
+
+    for _, w in ipairs(list) do
+        checked += 1
+        if checked > 200 then break end
+
+        if not isUsed(w) then
             count += 1
         end
     end
+
+    return count
+end
 
     return count
 end
@@ -117,6 +144,9 @@ local function getSmartWords(prefix)
     local results = {}
 
     for _, word in ipairs(kataModule) do
+    if i % 20 == 0 then
+    task.wait()
+    end
         local w = tostring(word)
         if string.sub(string.lower(w), 1, #prefix) == prefix then
             if not isUsed(w) then
@@ -400,3 +430,4 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
     end
 
 end)
+
