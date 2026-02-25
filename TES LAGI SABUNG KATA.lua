@@ -169,20 +169,17 @@ if killerMode then
     local bestScore = -math.huge
 
     for _, word in ipairs(words) do
-        local lastLetter = word:sub(-1):lower()
-        local nextOptions = countNextOptions(lastLetter)
+    local lastLetter = word:sub(-1):lower()
+    local nextOptions = countNextOptions(lastLetter)
 
-        -- Auto win kalau lawan tidak punya kata
-        if nextOptions == 0 then
-            selectedWord = word
-            break
-        end
+    -- Auto win kalau lawan tidak punya kata
+    if nextOptions == 0 then
+        selectedWord = word
+        break
+    end
 
-        -- Brutal mode: skip kalau lawan masih banyak opsi
-        if brutalMode and nextOptions > 2 then
-            continue
-        end
-
+    -- Brutal mode: skip kata yang masih banyak opsi
+    if not (brutalMode and nextOptions > 2) then
         local score = 0
 
         if rareLetters[lastLetter] then
@@ -197,6 +194,7 @@ if killerMode then
             bestWord = word
         end
     end
+end
 
     selectedWord = selectedWord or bestWord or words[1]
 else
@@ -400,4 +398,5 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
             startUltraAI()
         end
     end
+
 end)
