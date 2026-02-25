@@ -4,43 +4,47 @@
 -- =========================================================
 
 -- ================================
--- 1️⃣ Import service
+--========================
+-- GUI ANIME PROPER + SETTINGS
+--========================
+
 local player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
--- 2️⃣ Buat ScreenGui
+-- SCREEN GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "AnimeSambungKata"
 gui.Parent = player:WaitForChild("PlayerGui")
 gui.ResetOnSpawn = false
 
--- 3️⃣ Main Frame (tempat semua UI)
+-- MAIN FRAME
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 0, 0, 0)  -- mulai dari 0 biar animasi open terlihat
-main.Position = UDim2.new(0.5, -170, 0.5, -120)
-main.BackgroundColor3 = Color3.fromRGB(35, 20, 50)
+main.Size = UDim2.new(0,0,0,0)
+main.Position = UDim2.new(0.5, -180, 0.5, -160)
+main.BackgroundColor3 = Color3.fromRGB(35,20,50)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
--- 4️⃣ Gradient (Anime Style)
+-- GRADIENT
 local grad = Instance.new("UIGradient", main)
 grad.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(255,120,200)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(140,120,255))
 }
 
--- 5️⃣ Title
+-- TITLE
 local title = Instance.new("TextLabel", main)
 title.Size = UDim2.new(1,0,0,40)
 title.BackgroundTransparency = 1
-title.Text = "🌸 Auto Sambung Kata"
+title.Text = "🌸 Anime Auto Sambung Kata"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.TextColor3 = Color3.new(1,1,1)
 
--- 6️⃣ Status
+-- STATUS
 local status = Instance.new("TextLabel", main)
 status.Size = UDim2.new(1,0,0,25)
 status.Position = UDim2.new(0,0,0,45)
@@ -50,7 +54,17 @@ status.Font = Enum.Font.Gotham
 status.TextSize = 16
 status.TextColor3 = Color3.fromRGB(255,80,80)
 
--- 7️⃣ Toggle ON/OFF
+-- WATERMARK
+local watermark = Instance.new("TextLabel", main)
+watermark.Size = UDim2.new(1,0,0,20)
+watermark.Position = UDim2.new(0,0,1,-20)
+watermark.BackgroundTransparency = 1
+watermark.Text = "v Script | Anime Edition"
+watermark.Font = Enum.Font.Gotham
+watermark.TextSize = 12
+watermark.TextColor3 = Color3.fromRGB(230,200,255)
+
+-- TOGGLE AUTO
 local toggle = Instance.new("TextButton", main)
 toggle.Size = UDim2.new(0.8,0,0,45)
 toggle.Position = UDim2.new(0.1,0,0.65,0)
@@ -61,23 +75,92 @@ toggle.TextSize = 18
 toggle.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", toggle).CornerRadius = UDim.new(0,12)
 
--- 8️⃣ Watermark
-local watermark = Instance.new("TextLabel", main)
-watermark.Size = UDim2.new(1,0,0,20)
-watermark.Position = UDim2.new(0,0,1,-20)
-watermark.BackgroundTransparency = 1
-watermark.Text = "v Script | Anime Edition"
-watermark.Font = Enum.Font.Gotham
-watermark.TextSize = 12
-watermark.TextColor3 = Color3.fromRGB(230,200,255)
+-- MINIMIZE BUTTON
+local minimize = Instance.new("TextButton", main)
+minimize.Size = UDim2.new(0,30,0,30)
+minimize.Position = UDim2.new(1,-35,0,5)
+minimize.BackgroundColor3 = Color3.fromRGB(200,120,255)
+minimize.Text = "—"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 18
+minimize.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", minimize).CornerRadius = UDim.new(1,0)
 
--- 9️⃣ Animasi buka frame
+-- SETTINGS SLIDERS
+local settings = {
+    delayMin = 0.5,
+    delayMax = 1.2,
+    aggress = 1,
+    maxWordLength = 10,
+    usedWords = {}
+}
+
+-- Slider helper function
+local function CreateSlider(parent, name, min, max, default, yOffset, callback)
+    local frame = Instance.new("Frame", parent)
+    frame.Size = UDim2.new(0.8,0,0,40)
+    frame.Position = UDim2.new(0.1,0,0,yOffset)
+    frame.BackgroundTransparency = 0.3
+    frame.BackgroundColor3 = Color3.fromRGB(50,20,80)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(0.7,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Text = name.." : "..tostring(default)
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local slider = Instance.new("TextButton", frame)
+    slider.Size = UDim2.new(0.25,0,1,0)
+    slider.Position = UDim2.new(0.72,0,0,0)
+    slider.Text = tostring(default)
+    slider.BackgroundColor3 = Color3.fromRGB(255,120,200)
+    slider.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", slider).CornerRadius = UDim.new(0,8)
+    
+    local dragging = false
+    slider.MouseButton1Down:Connect(function() dragging = true end)
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local mouse = player:GetMouse()
+            local newVal = math.clamp(min + (max-min)*((mouse.X-frame.AbsolutePosition.X)/frame.AbsoluteSize.X), min, max)
+            callback(newVal)
+            label.Text = name.." : "..string.format("%.2f", newVal)
+            slider.Text = string.format("%.2f", newVal)
+        end
+    end)
+    slider.MouseButton1Up:Connect(function() dragging = false end)
+end
+
+-- Buat slider delayMin
+CreateSlider(main, "Delay Min", 0.1, 2, settings.delayMin, 0.3, function(v) settings.delayMin = v end)
+-- Buat slider delayMax
+CreateSlider(main, "Delay Max", 0.1, 2, settings.delayMax, 0.4, function(v) settings.delayMax = v end)
+-- Buat slider aggress
+CreateSlider(main, "Aggression", 1, 3, settings.aggress, 0.5, function(v) settings.aggress = v end)
+-- Buat slider maxWordLength
+CreateSlider(main, "Max Word Len", 3, 20, settings.maxWordLength, 0.6, function(v) settings.maxWordLength = v end)
+
+-- LIST USED WORDS
+local usedLabel = Instance.new("TextLabel", main)
+usedLabel.Size = UDim2.new(0.8,0,0.1,0)
+usedLabel.Position = UDim2.new(0.1,0,0.75,0)
+usedLabel.BackgroundTransparency = 0.3
+usedLabel.Text = "Used Words: 0"
+usedLabel.TextColor3 = Color3.new(1,1,1)
+usedLabel.Font = Enum.Font.Gotham
+usedLabel.TextSize = 14
+usedLabel.TextWrapped = true
+
+-- Animasi Open
 TweenService:Create(main, TweenInfo.new(0.6, Enum.EasingStyle.Back), {
-    Size = UDim2.new(0,340,0,240)
+    Size = UDim2.new(0,360,0,400)
 }):Play()
 
--- 🔘 10️⃣ Toggle logic
-local enabled = false
+-- TOGGLE LOGIC
 toggle.MouseButton1Click:Connect(function()
     enabled = not enabled
     if enabled then
@@ -93,43 +176,31 @@ toggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ✅ 11️⃣ Tombol Minimize
-local minimize = Instance.new("TextButton", main)
-minimize.Size = UDim2.new(0, 30, 0, 30)
-minimize.Position = UDim2.new(1, -35, 0, 5)
-minimize.BackgroundColor3 = Color3.fromRGB(200, 120, 255)
-minimize.Text = "—"
-minimize.Font = Enum.Font.GothamBold
-minimize.TextSize = 18
-minimize.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", minimize).CornerRadius = UDim.new(1,0)
-
+-- MINIMIZE LOGIC
 local minimized = false
 minimize.MouseButton1Click:Connect(function()
     minimized = not minimized
     if minimized then
-        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            Size = UDim2.new(0, 200, 0, 40)
-        }):Play()
+        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = UDim2.new(0,200,0,40)}):Play()
         title.Visible = true
         status.Visible = false
         toggle.Visible = false
         watermark.Visible = false
     else
-        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-            Size = UDim2.new(0, 340, 0, 240)
-        }):Play()
+        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = UDim2.new(0,360,0,400)}):Play()
         status.Visible = true
         toggle.Visible = true
         watermark.Visible = true
     end
 end)
 
--- 12️⃣ Loop Auto Sambung Kata (gunakan enabled)
+-- LOOP AUTO SAMBUNG KATA
 task.spawn(function()
     while task.wait(0.1) do
         if enabled then
-            -- masukkan logic auto sambung kata di sini
+            -- gunakan settings.delayMin, settings.delayMax, settings.aggress, settings.maxWordLength
+            -- update usedWords sesuai kata yang dikirim
+            usedLabel.Text = "Used Words: "..tostring(#settings.usedWords)
         end
     end
 end)
@@ -308,92 +379,6 @@ local function startUltraAI()
 end
 
 -- =========================================================
--- UI RAYFIELD
--- =========================================================
-local Window = Rayfield:CreateWindow({
-    Name = "Sambung-kata by Velliya",
-    LoadingTitle = "Loading...",
-    LoadingSubtitle = "Rayfield Edition",
-    ConfigurationSaving = {
-        Enabled = false
-    }
-})
-
-local MainTab = Window:CreateTab("Main", 4483345998)
-
-MainTab:CreateToggle({
-    Name = "Aktifkan Auto",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoEnabled = Value
-        if Value then
-            startUltraAI()
-        end
-    end
-})
-
-MainTab:CreateSlider({
-    Name = "Min Delay (ms)",
-    Range = {10, 500},
-    Increment = 5,
-    CurrentValue = config.minDelay,
-    Callback = function(Value)
-        config.minDelay = Value
-    end
-})
-
-MainTab:CreateSlider({
-    Name = "Max Delay (ms)",
-    Range = {20, 1000},
-    Increment = 5,
-    CurrentValue = config.maxDelay,
-    Callback = function(Value)
-        config.maxDelay = Value
-    end
-})
-
-MainTab:CreateSlider({
-    Name = "Aggression",
-    Range = {0, 100},
-    Increment = 5,
-    CurrentValue = config.aggression,
-    Callback = function(Value)
-        config.aggression = Value
-    end
-})
-
-MainTab:CreateSlider({
-    Name = "Min Word Length",
-    Range = {1, 10},
-    Increment = 1,
-    CurrentValue = config.minLength,
-    Callback = function(Value)
-        config.minLength = Value
-    end
-})
-
-MainTab:CreateSlider({
-    Name = "Max Word Length",
-    Range = {5, 30},
-    Increment = 1,
-    CurrentValue = config.maxLength,
-    Callback = function(Value)
-        config.maxLength = Value
-    end
-})
-
-usedWordsDropdown = MainTab:CreateDropdown({
-    Name = "Used Words",
-    Options = usedWordsList,
-    CurrentOption = "",
-    Callback = function() end
-})
-
-local statusParagraph = MainTab:CreateParagraph({
-    Title = "Status",
-    Content = "Idle"
-})
-
 -- =========================================================
 -- REMOTE EVENTS
 -- =========================================================
