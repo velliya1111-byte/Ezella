@@ -4,69 +4,132 @@
 -- =========================================================
 
 -- ================================
--- LOAD RAYFIELD
--- ================================
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua'))()
+-- 1️⃣ Import service
+local player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
-if not Rayfield then
-    warn("Rayfield gagal dimuat")
-    return
-end
+-- 2️⃣ Buat ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "AnimeSambungKata"
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
 
---// WINDOW ANIME STYLE
-local Window = Rayfield:CreateWindow({
-    Name = "Sambung Kata Hub",
-    LoadingTitle = "UI Loading...",
-    LoadingSubtitle = "by Velliya Script",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
-})
+-- 3️⃣ Main Frame (tempat semua UI)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 0, 0, 0)  -- mulai dari 0 biar animasi open terlihat
+main.Position = UDim2.new(0.5, -170, 0.5, -120)
+main.BackgroundColor3 = Color3.fromRGB(35, 20, 50)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
 
---// TAB UTAMA
-local MainTab = Window:CreateTab("🎌 Main Menu", 7072719338) -- icon anime
+-- 4️⃣ Gradient (Anime Style)
+local grad = Instance.new("UIGradient", main)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,120,200)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140,120,255))
+}
 
---// WATERMARK / INFO
-MainTab:CreateParagraph({
-    Title = "Anime Auto Sambung Kata",
-    Content = "Tema Anime UI | Toggle untuk aktifkan auto jawab sambung kata."
-})
+-- 5️⃣ Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "🌸 Auto Sambung Kata"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.new(1,1,1)
 
---// TOGGLE AUTO
+-- 6️⃣ Status
+local status = Instance.new("TextLabel", main)
+status.Size = UDim2.new(1,0,0,25)
+status.Position = UDim2.new(0,0,0,45)
+status.BackgroundTransparency = 1
+status.Text = "Status : OFF"
+status.Font = Enum.Font.Gotham
+status.TextSize = 16
+status.TextColor3 = Color3.fromRGB(255,80,80)
+
+-- 7️⃣ Toggle ON/OFF
+local toggle = Instance.new("TextButton", main)
+toggle.Size = UDim2.new(0.8,0,0,45)
+toggle.Position = UDim2.new(0.1,0,0.65,0)
+toggle.BackgroundColor3 = Color3.fromRGB(255,120,200)
+toggle.Text = "AKTIFKAN"
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 18
+toggle.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", toggle).CornerRadius = UDim.new(0,12)
+
+-- 8️⃣ Watermark
+local watermark = Instance.new("TextLabel", main)
+watermark.Size = UDim2.new(1,0,0,20)
+watermark.Position = UDim2.new(0,0,1,-20)
+watermark.BackgroundTransparency = 1
+watermark.Text = "v Script | Anime Edition"
+watermark.Font = Enum.Font.Gotham
+watermark.TextSize = 12
+watermark.TextColor3 = Color3.fromRGB(230,200,255)
+
+-- 9️⃣ Animasi buka frame
+TweenService:Create(main, TweenInfo.new(0.6, Enum.EasingStyle.Back), {
+    Size = UDim2.new(0,340,0,240)
+}):Play()
+
+-- 🔘 10️⃣ Toggle logic
 local enabled = false
-MainTab:CreateToggle({
-    Name = "✨ Aktifkan Auto Sambung Kata",
-    CurrentValue = false,
-    Flag = "AutoSambungKata",
-    Callback = function(Value)
-        enabled = Value
-        if enabled then
-            Rayfield:Notify({
-                Title = "Auto ON",
-                Content = "Auto sambung kata diaktifkan 🌸",
-                Duration = 3,
-                Image = 7072719338
-            })
-        else
-            Rayfield:Notify({
-                Title = "Auto OFF",
-                Content = "Auto sambung kata dimatikan 💮",
-                Duration = 3,
-                Image = 7072719338
-            })
-        end
-    end,
-})
+toggle.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    if enabled then
+        status.Text = "Status : ON"
+        status.TextColor3 = Color3.fromRGB(120,255,180)
+        toggle.Text = "MATIKAN"
+        toggle.BackgroundColor3 = Color3.fromRGB(140,120,255)
+    else
+        status.Text = "Status : OFF"
+        status.TextColor3 = Color3.fromRGB(255,80,80)
+        toggle.Text = "AKTIFKAN"
+        toggle.BackgroundColor3 = Color3.fromRGB(255,120,200)
+    end
+end)
 
---// LOOP AUTO SAMBUNG KATA
+-- ✅ 11️⃣ Tombol Minimize
+local minimize = Instance.new("TextButton", main)
+minimize.Size = UDim2.new(0, 30, 0, 30)
+minimize.Position = UDim2.new(1, -35, 0, 5)
+minimize.BackgroundColor3 = Color3.fromRGB(200, 120, 255)
+minimize.Text = "—"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 18
+minimize.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", minimize).CornerRadius = UDim.new(1,0)
+
+local minimized = false
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 200, 0, 40)
+        }):Play()
+        title.Visible = true
+        status.Visible = false
+        toggle.Visible = false
+        watermark.Visible = false
+    else
+        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 340, 0, 240)
+        }):Play()
+        status.Visible = true
+        toggle.Visible = true
+        watermark.Visible = true
+    end
+end)
+
+-- 12️⃣ Loop Auto Sambung Kata (gunakan enabled)
 task.spawn(function()
     while task.wait(0.1) do
         if enabled then
-            -- masukkan logic auto sambung kata kamu di sini
+            -- masukkan logic auto sambung kata di sini
         end
     end
 end)
