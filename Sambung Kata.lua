@@ -33,7 +33,12 @@ if not wordList then
 end
 
 local kataModule = require(wordList:WaitForChild("IndonesianWords"))
-
+-- DEBUG: Tampilkan semua kata di output
+print("===== DAFTAR KATA INDONESIA =====")
+for i, kata in ipairs(kataModule) do
+    print(i, kata)
+end
+print("Total kata:", #kataModule)
 -- ================================
 -- REMOTES
 -- ================================
@@ -333,4 +338,5 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
             startUltraAI()
         end
     end
+
 end)
