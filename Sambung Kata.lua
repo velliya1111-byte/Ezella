@@ -168,7 +168,10 @@ local manualWords = {
 -- =========================
 -- 2. URL GITHUB DICTIONARY
 -- =========================
-local url = "https://raw.githubusercontent.com/username/repo/main/dictionary.txt"
+local url = {
+    "https://raw.githubusercontent.com/username/repo/main/dictionary.txt",
+    "https://raw.githubusercontent.com/velliya1111-byte/Ezella/refs/heads/main/KATA-KATA%20v0.1.lua"
+}
 
 -- =========================
 -- 3. GABUNG SEMUA KATA
@@ -541,4 +544,5 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
     end
 
 end)
+
 
