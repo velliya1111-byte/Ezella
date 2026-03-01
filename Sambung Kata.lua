@@ -184,17 +184,18 @@ for _, kata in ipairs(manualWords) do
 end
 
 -- ambil dari GitHub
-local success, result = pcall(function()
-    return HttpService:GetAsync(url)
-end)
-
-if success then
-    for kata in string.gmatch(result, "[^\r\n]+") do
-        table.insert(kataModule, string.lower(kata))
+for _, u in ipairs(url) do
+    local success, result = pcall(function()
+        return HttpService:GetAsync(u)
+    end)
+    if success then
+        for kata in string.gmatch(result, "[^\r\n]+") do
+            table.insert(kataModule, string.lower(kata))
+        end
+        print("GitHub dictionary dimuat:", u)
+    else
+        warn("Gagal load GitHub:", u, result)
     end
-    print("GitHub dictionary dimuat!")
-else
-    warn("Gagal load GitHub:", result)
 end
 
 -- =========================
@@ -544,6 +545,7 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
     end
 
 end)
+
 
 
 
