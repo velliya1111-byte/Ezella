@@ -21,11 +21,10 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ================================
 -- LOAD MODULE
--- ================================
 local HttpService = game:GetService("HttpService")
 
 -- =========================
--- REQUEST (tetap sama)
+-- REQUEST
 -- =========================
 local function try_request(url)
     local ok, body = pcall(function() return game:HttpGet(url) end)
@@ -47,34 +46,24 @@ local function try_request(url)
 end
 
 -- =========================
--- DICTIONARY LOADER
+-- LOAD DICTIONARY DARI URL
 -- =========================
 local function loadDictionary(url)
-    local full = url .. (url:find("?") and "&" or "?") .. "cb=" .. tostring(math.random(1,1e9))
-    local ok, src = try_request(full)
+    local ok, src = try_request(url)
     if not ok then
-        warn("Gagal ambil dictionary:", src)
+        warn("Gagal ambil dictionary:", url)
         return {}
     end
 
     local dict = {}
-
-    -- Split per baris
     for word in src:gmatch("[^\r\n]+") do
         word = word:lower():gsub("^%s*(.-)%s*$", "%1")
         if #word > 0 then
             table.insert(dict, word)
         end
     end
-
     return dict
 end
-local url = "https://raw.githubusercontent.com/username/repo/main/dictionary.txt"
-local kamus = loadDictionary(url)
-
-print("Total kata:", #kamus)
-print("Contoh kata:", kamus[1])
-
 -- =========================
 -- 1. DICTIONARY MANUAL
 -- =========================
@@ -219,7 +208,7 @@ local manualWords = {
 -- =========================
 -- 2. URL GITHUB DICTIONARY
 -- =========================
-local url = {
+local urls = {
     "https://raw.githubusercontent.com/velliya1111-byte/Ezella/refs/heads/main/KATA-KATA%20v1.1.txt",
     "https://raw.githubusercontent.com/velliya1111-byte/Ezella/refs/heads/main/KATA-KATA%20v0.1.txt"
 }
@@ -229,9 +218,17 @@ local url = {
 -- =========================
 local kataModule = {}
 
--- masukkan manual dulu
+-- manual words
 for _, kata in ipairs(manualWords) do
     table.insert(kataModule, string.lower(kata))
+end
+
+-- load dari semua URL
+for _, link in ipairs(urls) do
+    local words = loadDictionary(link)
+    for _, w in ipairs(words) do
+        table.insert(kataModule, w)
+    end
 end
 
 -- =========================
@@ -269,14 +266,13 @@ local function GetNextWord(huruf)
 end
 
 -- =========================
--- 6. TEST OUTPUT (ATAS -> BAWAH)
+-- TEST OUTPUT
 -- =========================
 print("===== DAFTAR KATA =====")
 for i, kata in ipairs(kataModule) do
     print(i, kata)
 end
 
--- contoh sambung kata
 local nextWord = GetNextWord("a")
 print("AI jawab huruf 'a':", nextWord or "Tidak ada")
 
@@ -581,6 +577,7 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
     end
 
 end)
+
 
 
 
