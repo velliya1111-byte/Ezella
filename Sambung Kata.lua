@@ -25,6 +25,57 @@ local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 
 -- =========================
+-- REQUEST (tetap sama)
+-- =========================
+local function try_request(url)
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and type(body)=="string" and #body>0 then return true, body end
+
+    ok, body = pcall(function() return HttpService:GetAsync(url, true) end)
+    if ok and type(body)=="string" and #body>0 then return true, body end
+
+    local req = (typeof(syn)=="table" and syn.request)
+            or (typeof(request)=="function" and request)
+            or (typeof(http_request)=="function" and http_request)
+    if req then
+        local ok2, res = pcall(req, {Url=url, Method="GET"})
+        if ok2 and res and type(res.Body)=="string" and #res.Body>0 then
+            return true, res.Body
+        end
+    end
+    return false, "fetch failed"
+end
+
+-- =========================
+-- DICTIONARY LOADER
+-- =========================
+local function loadDictionary(url)
+    local full = url .. (url:find("?") and "&" or "?") .. "cb=" .. tostring(math.random(1,1e9))
+    local ok, src = try_request(full)
+    if not ok then
+        warn("Gagal ambil dictionary:", src)
+        return {}
+    end
+
+    local dict = {}
+
+    -- Split per baris
+    for word in src:gmatch("[^\r\n]+") do
+        word = word:lower():gsub("^%s*(.-)%s*$", "%1")
+        if #word > 0 then
+            table.insert(dict, word)
+        end
+    end
+
+    return dict
+end
+local url = "https://raw.githubusercontent.com/username/repo/main/dictionary.txt"
+local kamus = loadDictionary(url)
+
+print("Total kata:", #kamus)
+print("Contoh kata:", kamus[1])
+
+-- =========================
 -- 1. DICTIONARY MANUAL
 -- =========================
 local manualWords = {
@@ -181,20 +232,6 @@ local kataModule = {}
 -- masukkan manual dulu
 for _, kata in ipairs(manualWords) do
     table.insert(kataModule, string.lower(kata))
-end
-
--- ambil dari GitHub
-local success, result = pcall(function()
-    return HttpService:GetAsync(url)
-end)
-
-if success then
-    for kata in string.match(result, "[^\r\n]+") do
-        table.insert(kataModule, string.lower(kata))
-    end
-    print("GitHub dictionary dimuat!")
-else
-    warn("Gagal load GitHub:", result)
 end
 
 -- =========================
@@ -544,6 +581,7 @@ UsedWordWarn.OnClientEvent:Connect(function(word)
     end
 
 end)
+
 
 
 
