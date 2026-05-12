@@ -76,7 +76,7 @@ export default function BlueStoreWebsite() {
           <div className="absolute inset-0 flex flex-col justify-center p-6">
             <p className="text-xl font-bold text-cyan-400">Halo,</p>
             <h2 className="mt-1 max-w-[240px] text-3xl font-black leading-tight">
-              Selamat Datang di <span className="text-cyan-400">Velliya Store</span>
+              Selamat Datang di <span className="text-cyan-400">Velliya</span>
             </h2>
             <p className="mt-3 max-w-[250px] text-xs text-zinc-400">
               Tempat terbaik untuk kebutuhan layanan digital.
