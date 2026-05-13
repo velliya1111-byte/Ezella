@@ -116,6 +116,292 @@
     <header>
         <div class="logo-area">
             <div class="logo-box">
+                <img src="https://files.catbox.moe/choggx.jpg" alt="Logo">
+            </div>
+            <h1 class="brand-title">Velliya</h1>
+        </div>
+        <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
+    </header>
+
+    <!-- CONTENT PAGES -->
+    
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page-container active">
+        <section class="hero-section">
+            <div class="hero-card">
+                <video autoplay muted loop playsinline src="https://files.catbox.moe/me7jcf.mp4"></video>
+                <div class="hero-content">
+                    <h2 class="hero-title">Velliya <span>Digital</span></h2>
+                    <p class="hero-sub">Premium Aplikasi & Akun MLBB</p>
+                    <button class="hero-btn" onclick="switchTab('shop')">Mulai Belanja</button>
+                </div>
+            </div>
+        </section>
+        <h2 class="section-title"><span class="title-dot"></span> Terlaris Hari Ini</h2>
+        <div class="product-grid" id="home-grid"></div>
+    </div>
+
+    <!-- SHOP PAGE -->
+    <div id="page-shop" class="page-container">
+        <div class="search-box">
+            <input type="text" placeholder="Cari layanan digital...">
+        </div>
+        <div class="product-grid" id="shop-grid"></div>
+    </div>
+
+    <!-- CART PAGE -->
+    <div id="page-cart" class="page-container">
+        <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 20px; padding: 0 5px;">🛒 Keranjang Belanja</h2>
+        <div id="cart-list" style="padding: 0 5px;"></div>
+        
+        <!-- SELEKSI METODE PEMBAYARAN BARU -->
+        <div id="payment-section" class="payment-section" style="display: none;">
+            <h3 class="payment-title">Pilih Metode Pembayaran</h3>
+            <div class="payment-grid">
+                <div class="payment-card selected" id="pay-dana" onclick="selectPayment('DANA')">
+                    <span class="pay-name">DANA</span>
+                    <span class="pay-desc">E-Wallet Otomatis</span>
+                </div>
+                <div class="payment-card" id="pay-qris" onclick="selectPayment('QRIS')">
+                    <span class="pay-name">QRIS All Payment</span>
+                    <span class="pay-desc">Scan Code Instan</span>
+                </div>
+                <div class="payment-card" id="pay-gopay" onclick="selectPayment('GOPAY')">
+                    <span class="pay-name">GOPAY</span>
+                    <span class="pay-desc">E-Wallet Gojek</span>
+                </div>
+                <div class="payment-card" id="pay-tf" onclick="selectPayment('Transfer Bank')">
+                    <span class="pay-name">Transfer Bank</span>
+                    <span class="pay-desc">Manual Verifikasi</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="cart-summary" class="checkout-box" style="display: none; margin: 20px 5px 0;">
+            <div class="total-row">
+                <span class="total-label">Total Pembayaran</span>
+                <span class="text-cyan-400 font-black" style="font-size: 20px;" id="total-price">Rp0</span>
+            </div>
+            <<button class="checkout-btn" onclick="checkoutKeWhatsApp()">Checkout via WhatsApp</button>
+        </div>
+    </div>
+
+    <!-- USER PAGE -->
+    <div id="page-user" class="page-container">
+        <div class="profile-card">
+            <div class="profile-avatar">👤</div>
+            <h3 style="font-size: 20px; font-weight: bold;">Halo, Pengguna!</h3>
+            <p style="color: #71717a; font-size: 12px; margin-top: 10px; line-height: 1.6;">Masuk ke akun Velliya untuk melacak pesanan dan mendapatkan promo menarik.</p>
+            <button class="profile-btn" onclick="alert('Fitur login segera hadir!')">Masuk / Daftar</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav>
+        <button id="btn-home" class="nav-btn active" onclick="switchTab('home')">Home</button>
+        <button id="btn-shop" class="nav-btn" onclick="switchTab('shop')">Shop</button>
+        <button id="btn-cart" class="nav-btn" onclick="switchTab('cart')">Cart<div id="badge" class="cart-badge" style="display: none;">0</div></button>
+        <button id="btn-user" class="nav-btn" onclick="switchTab('user')">User</button>
+    </nav>
+
+    <!-- --- JAVASCRIPT LOGIC --- -->
+    <script>
+        const products = [
+            { id: 1, title: "Sewa Bot WA", price: "Rp500", rawPrice: 500, stock: 15, image: "unsplash.com" },
+            { id: 2, title: "Panel Pterodactyl", price: "Rp2.000", rawPrice: 2000, stock: 5, image: "unsplash.com" },
+            { id: 3, title: "SC ITACHI MD", price: "Rp80.000", rawPrice: 80000, stock: 0, image: "unsplash.com" },
+            { id: 4, title: "Music Bot Premium", price: "Rp1.000", rawPrice: 1000, stock: 24, image: "unsplash.com" }
+        ];
+
+        let cart = [];
+        let selectedPaymentMethod = "DANA"; // Default pilihan awal
+        const ownerWhatsAppNumber = "6281234567890"; // <-- GANTI DENGAN NOMOR WA KAMU AKTIF (AWALI 62)
+
+        function getStockLabel(stock) {
+            if (stock > 10) return `<span class="stock-ready">Stok Tersedia (${stock})</span>`;
+            if (stock > 0) return `<span class="stock-count">Sisa ${stock} pcs!</span>`;
+            return `<span class="stock-empty">Stok Habis</span>`;
+        }
+
+        function getProductQtyInCart(id) {
+            return cart.filter(item => item.id === id).length;
+        }
+
+        function renderProducts() {
+            const homeGrid = document.getElementById('home-grid');
+            const shopGrid = document.getElementById('shop-grid');
+            homeGrid.innerHTML = ''; shopGrid.innerHTML = '';
+
+            products.forEach(p => {
+                const qty = getProductQtyInCart(p.id);
+                const isPlusDisabled = p.stock === 0 ? 'disabled' : '';
+                const isMinusDisabled = qty === 0 ? 'disabled' : '';
+
+                const cardHTML = `
+                    <div class="product-card">
+                        <img src="https://files.catbox.moe/choggx.jpg" class="product-img" alt="${p.title}">
+                        <p class="product-name">${p.title}</p>
+                        <div class="product-stock">${getStockLabel(p.stock)}</div>
+                        <div class="product-footer">
+                            <span class="product-price">${p.price}</span>
+                            <div class="qty-controls">
+                                <button class="qty-btn" ${isMinusDisabled} onclick="removeFromCartByProductId(${p.id})">-</button>
+                                <span class="qty-number">${qty}</span>
+                                <button class="qty-btn" ${isPlusDisabled} onclick="addToCart(${p.id})">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                homeGrid.innerHTML += cardHTML; shopGrid.innerHTML += cardHTML;
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`page-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+            if (tabId === 'cart') renderCart();
+        }
+
+        function toggleMenu(isOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            if(isOpen) { sidebar.classList.add('open'); overlay.classList.add('open'); } 
+            else { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+        }
+
+        function addToCart(id) {
+            const prod = products.find(p => p.id === id);
+            if (prod.stock > 0) {
+                prod.stock -= 1;
+                cart.push({ ...prod, cartId: Math.random() });
+                renderProducts(); updateBadge();
+            }
+        }
+
+        function removeFromCartByProductId(id) {
+            const index = cart.findLastIndex(item => item.id === id);
+            if (index !== -1) {
+                const originalProd = products.find(p => p.id === id);
+                originalProd.stock += 1;
+                cart.splice(index, 1);
+                renderProducts(); updateBadge();
+            }
+        }
+
+        function removeRowFromCart(cartId) {
+            const itemInCart = cart.find(item => item.cartId === cartId);
+            const originalProd = products.find(p => p.id === itemInCart.id);
+            originalProd.stock += 1;
+            cart = cart.filter(item => item.cartId !== cartId);
+            renderProducts(); renderCart(); updateBadge();
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('badge');
+            if (cart.length > 0) { badge.innerText = cart.length; badge.style.display = 'flex'; } 
+            else { badge.style.display = 'none'; }
+        }
+
+        function getGroupedCart() {
+            const grouped = {};
+            cart.forEach(item => {
+                if (!grouped[item.id]) grouped[item.id] = { ...item, quantity: 0, totalPrice: 0 };
+                grouped[item.id].quantity += 1;
+                grouped[item.id].totalPrice += item.rawPrice;
+            });
+            return Object.values(grouped);
+        }
+
+        // Fungsi Memilih Metode Pembayaran
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-card').forEach(card => card.classList.remove('selected'));
+            if(method === 'DANA') document.getElementById('pay-dana').classList.add('selected');
+            if(method === 'QRIS') document.getElementById('pay-qris').classList.add('selected');
+            if(method === 'GOPAY') document.getElementById('pay-gopay').classList.add('selected');
+            if(method === 'Transfer Bank') document.getElementById('pay-tf').classList.add('selected');
+        }
+
+        function renderCart() {
+            const cartList = document.getElementById('cart-list');
+            const summary = document.getElementById('cart-summary');
+            const paymentSec = document.getElementById('payment-section');
+            const totalPriceText = document.getElementById('total-price');
+
+            if (cart.length === 0) {
+                cartList.innerHTML = `<div class="cart-empty"><p>Belum ada barang di sini.</p></div>`;
+                summary.style.display = 'none';
+                paymentSec.style.display = 'none';
+                return;
+            }
+
+            cartList.innerHTML = '';
+            let grandTotal = 0;
+            const groupedItems = getGroupedCart();
+
+            groupedItems.forEach(item => {
+                grandTotal += item.totalPrice;
+                cartList.innerHTML += `
+                    <div class="cart-item">
+                        <img src="https://files.catbox.moe/choggx.jpg" class="cart-item-img">
+                        <div class="cart-item-info">
+                            <h4 class="cart-item-title">${item.title}</h4>
+                            <p class="cart-item-price">${item.price}</p>
+                            <p class="cart-item-qty">Jumlah: ${item.quantity}x (Total: Rp${item.totalPrice.toLocaleString('id-ID')})</p>
+                        </div>
+                        <button class="remove-btn" onclick="removeRowFromCart(${item.cartId})">🗑️</button>
+                    </div>
+                `;
+            });
+
+            totalPriceText.innerText = 'Rp' + grandTotal.toLocaleString('id-ID');
+            summary.style.display = 'block';
+            paymentSec.style.display = 'block';
+        }
+
+        // --- SISTEM PEMBUAT NOTA OTOMATIS KE WHATSAPP ---
+        function processCheckout() {
+            if(cart.length === 0) return;
+
+            const groupedItems = getGroupedCart();
+            let total = 0;
+
+            // Judul Nota Teks WA
+            let message = `*HALO VELLIYA STORE - NOTA PESANAN NEW*\n`;
+            message += `==================================\n\n`;
+            
+            // Loop Daftar Belanja
+            groupedItems.forEach((item, index) => {
+                total += item.totalPrice;
+                message += `${index + 1}. *${item.title}*\n`;
+                message += `   » Jumlah: ${item.quantity}x\n`;
+                message += `   » Subtotal: Rp${item.totalPrice.toLocaleString('id-ID')}\n\n`;
+            });
+
+            message += `==================================\n`;
+            message += `*Metode Bayar:* ${selectedPaymentMethod}\n`;
+            message += `*Total Akhir:* Rp${total.toLocaleString('id-ID')}\n\n`;
+            message += `Mohon segera dikirimkan instruksi pembayarannya ya min, Terima kasih!`;
+
+            // Proses Pengiriman Teks Melalui URL WhatsApp Resmi Browser
+            const encodeMsg = encodeURIComponent(message);
+            const waUrl = `wa.me{ownerWhatsAppNumber}?text=${encodeMsg}`;
+            
+            window.open(waUrl, '_blank');
+        }
+
+        renderProducts();
+    </script>
+</body>
+</html>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-area">
+            <div class="logo-box">
                 <img src="catbox.moe" alt="Logo">
             </div>
             <h1 class="brand-title">Velliya</h1>
